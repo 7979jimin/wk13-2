@@ -1,0 +1,2146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpeakFlow Pro — 분절음·초분절음 통합 발음 트레이너</title>
+  <style>
+    :root {
+      --bg: #f3f5fa;
+      --surface: #ffffff;
+      --surface-alt: #f8fafc;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-soft: #eef2ff;
+      --seg: #0284c7;
+      --seg-bg: #e0f2fe;
+      --supra: #7c3aed;
+      --supra-bg: #f3e8ff;
+      --free: #059669;
+      --free-bg: #d1fae5;
+      --success: #16a34a;
+      --success-bg: #dcfce7;
+      --warn: #d97706;
+      --warn-bg: #fef3c7;
+      --danger: #dc2626;
+      --danger-bg: #fee2e2;
+      --radius: 16px;
+      --shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 20px 16px 64px;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 13px;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 6px 16px rgba(79, 70, 229, 0.28);
+    }
+
+    .brand h1 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; }
+    .brand p { font-size: 0.84rem; color: var(--text-muted); }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 11px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .progress-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .progress-pill .val { color: var(--primary); font-weight: 800; }
+
+    .alert-banner {
+      display: none;
+      background: var(--warn-bg);
+      color: #92400e;
+      border: 1px solid #fcd34d;
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      font-size: 0.88rem;
+    }
+
+    /* Module Selector */
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .module-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-align: left;
+      position: relative;
+    }
+
+    .module-card:hover { border-color: #a5b4fc; transform: translateY(-1px); }
+    .module-card.active {
+      border-color: var(--primary);
+      background: #fafaff;
+      box-shadow: 0 6px 16px rgba(79, 70, 229, 0.12);
+    }
+
+    .module-title {
+      font-size: 0.92rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .module-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    .tag.seg { background: var(--seg-bg); color: var(--seg); }
+    .tag.supra { background: var(--supra-bg); color: var(--supra); }
+    .tag.free { background: var(--free-bg); color: var(--free); }
+
+    .module-dots {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .m-dot {
+      width: 18px;
+      height: 5px;
+      border-radius: 999px;
+      background: var(--border);
+    }
+    .m-dot.done { background: var(--success); }
+
+    /* Stepper */
+    .stepper {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .step-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.18s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .step-btn:hover { border-color: var(--primary); }
+    .step-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+    }
+
+    .step-num {
+      font-size: 0.72rem;
+      font-weight: 800;
+      opacity: 0.78;
+      display: flex;
+      justify-content: space-between;
+    }
+    .step-name { font-size: 0.88rem; font-weight: 800; }
+    .step-sub { font-size: 0.75rem; opacity: 0.8; }
+
+    /* Main Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 26px;
+      margin-bottom: 20px;
+    }
+
+    .stage-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    .stage-title { font-size: 1.18rem; font-weight: 800; margin-bottom: 4px; }
+    .stage-desc { font-size: 0.88rem; color: var(--text-muted); }
+
+    .guide-box {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      border-radius: 10px;
+      padding: 12px 15px;
+      font-size: 0.88rem;
+      margin-bottom: 20px;
+    }
+    .guide-box.seg { border-left-color: var(--seg); }
+    .guide-box.supra { border-left-color: var(--supra); }
+    .guide-box.free { border-left-color: var(--free); }
+    .guide-box strong { color: var(--text); }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 10px 18px;
+      border-radius: 11px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.16s ease;
+    }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: var(--surface-alt);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+
+    .btn-mic {
+      padding: 14px 28px;
+      font-size: 1rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(79, 70, 229, 0.32);
+      min-width: 190px;
+    }
+    .btn-mic:hover:not(:disabled) { transform: translateY(-1px); }
+    .btn-mic.listening {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      animation: pulse 1.4s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); }
+      70% { box-shadow: 0 0 0 16px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    .action-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 20px 0 14px;
+    }
+
+    /* Stage 1: Minimal Pairs */
+    .pair-selector {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .pair-pill {
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .pair-pill.active {
+      background: var(--seg);
+      color: #fff;
+      border-color: var(--seg);
+    }
+
+    .minimal-pair-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .pair-box {
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+      background: var(--surface-alt);
+      transition: all 0.18s;
+      cursor: pointer;
+    }
+    .pair-box:hover { border-color: var(--seg); background: #f0f9ff; }
+    .pair-box.selected {
+      border-color: var(--seg);
+      background: #e0f2fe;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.14);
+    }
+    .pair-box.quiz-correct { border-color: var(--success); background: var(--success-bg); }
+    .pair-box.quiz-wrong { border-color: var(--danger); background: var(--danger-bg); }
+
+    .pair-word { font-size: 2rem; font-weight: 800; color: var(--text); }
+    .pair-ipa { font-size: 1rem; color: var(--seg); font-weight: 600; margin: 4px 0; }
+    .pair-meaning { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 10px; }
+
+    .quiz-bar {
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .quiz-status { font-size: 0.88rem; font-weight: 600; color: var(--text-muted); }
+
+    /* Stage 2: Suprasegmental Visuals */
+    .supra-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .toggle-chip {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .toggle-chip.on {
+      background: var(--supra-bg);
+      color: var(--supra);
+      border-color: #c4b5fd;
+    }
+
+    .visual-sentence-box {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px 18px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .target-sentence {
+      font-size: clamp(1.3rem, 2.8vw, 1.85rem);
+      font-weight: 700;
+      line-height: 1.8;
+      margin-bottom: 10px;
+    }
+
+    .word-token {
+      display: inline-block;
+      padding: 2px 6px;
+      margin: 0 1px;
+      border-radius: 8px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.15s;
+    }
+    .word-token:hover { background: var(--primary-soft); }
+
+    .show-guides .word-token.stressed {
+      font-weight: 900;
+      color: var(--supra);
+      font-size: 1.08em;
+    }
+    .show-guides .word-token.stressed::before {
+      content: "●";
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.55rem;
+      color: var(--supra);
+    }
+
+    .show-guides .word-token.seg-focus {
+      border-bottom: 3px solid var(--seg);
+    }
+
+    .link-mark {
+      display: none;
+      color: #ec4899;
+      font-weight: 900;
+      font-size: 0.9em;
+      margin: 0 -3px;
+      vertical-align: sub;
+    }
+    .show-guides .link-mark { display: inline; }
+
+    .pause-mark {
+      display: none;
+      color: #94a3b8;
+      font-weight: 800;
+      margin: 0 6px;
+    }
+    .show-guides .pause-mark { display: inline; }
+
+    .intonation-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff;
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--supra);
+      margin-top: 6px;
+    }
+
+    .word-token.match { background: var(--success-bg); color: var(--success) !important; }
+    .word-token.close { background: var(--warn-bg); color: var(--warn) !important; }
+    .word-token.miss { background: var(--danger-bg); color: var(--danger) !important; text-decoration: underline wavy rgba(220,38,38,0.5); }
+
+    .meaning-sub { font-size: 0.94rem; color: var(--text-muted); margin-top: 8px; }
+    .ipa-sub { font-size: 0.9rem; color: var(--primary); margin-top: 4px; }
+
+    .legend-row {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 12px;
+    }
+
+    /* Stage 3: Roleplay */
+    .dialogue-box {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .bubble {
+      padding: 16px 18px;
+      border-radius: 14px;
+      max-width: 92%;
+    }
+    .bubble.partner {
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      align-self: flex-start;
+    }
+    .bubble.user {
+      background: #eef2ff;
+      border: 1.5px solid #c7d2fe;
+      align-self: flex-end;
+      width: 100%;
+    }
+
+    .bubble-role {
+      font-size: 0.76rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .slot-options {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .slot-chip {
+      padding: 6px 12px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: #fff;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .slot-chip.active {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* Stage 4: Free Production */
+    .mission-card {
+      background: linear-gradient(135deg, #ecfdf5, #f0f9ff);
+      border: 1px solid #a7f3d0;
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 18px;
+    }
+    .mission-title { font-size: 1rem; font-weight: 800; color: #065f46; margin-bottom: 6px; }
+    .mission-prompt { font-size: 0.95rem; color: var(--text); margin-bottom: 12px; }
+
+    .target-words-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .kw-badge {
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: #fff;
+      border: 1.5px solid #cbd5e1;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .kw-badge.used {
+      background: var(--success);
+      border-color: var(--success);
+      color: #fff;
+      transform: scale(1.04);
+    }
+
+    .free-transcript-box {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      min-height: 110px;
+      margin-bottom: 14px;
+    }
+    .free-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .metric-tile {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+    }
+    .metric-val { font-size: 1.2rem; font-weight: 800; color: var(--primary); }
+    .metric-lbl { font-size: 0.76rem; color: var(--text-muted); font-weight: 600; }
+
+    .rubric-box {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .rubric-box h4 { font-size: 0.9rem; font-weight: 800; margin-bottom: 10px; }
+    .rubric-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.86rem;
+      padding: 6px 0;
+      cursor: pointer;
+    }
+    .rubric-item input { width: 17px; height: 17px; accent-color: var(--free); cursor: pointer; }
+
+    /* Feedback Result Panel */
+    .result-panel {
+      display: none;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      margin-top: 14px;
+    }
+    .result-panel.show { display: block; animation: fadeIn 0.25s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .score-group { display: flex; align-items: center; gap: 14px; }
+    .score-ring {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 5px solid var(--border);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      font-weight: 800;
+    }
+    .score-ring.high { border-color: var(--success); color: var(--success); }
+    .score-ring.mid { border-color: var(--warn); color: var(--warn); }
+    .score-ring.low { border-color: var(--danger); color: var(--danger); }
+
+    .recognized-box {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+    }
+    .recognized-lbl { font-size: 0.74rem; font-weight: 800; color: var(--text-muted); margin-bottom: 2px; }
+    .recognized-val { font-size: 1rem; font-weight: 600; }
+
+    .stage-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 22px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* History */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.86rem;
+    }
+
+    @media (max-width: 720px) {
+      .stepper { grid-template-columns: repeat(2, 1fr); }
+      .minimal-pair-grid { grid-template-columns: 1fr; }
+      .card { padding: 18px 14px; }
+      .btn-mic { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="brand-icon">🎯</div>
+        <div>
+          <h1>SpeakFlow Pro</h1>
+          <p>분절음 + 초분절음 통합 · 통제 연습에서 자유 발화까지</p>
+        </div>
+      </div>
+      <div class="header-controls">
+        <select id="accentSelect" aria-label="억양">
+          <option value="en-US">🇺🇸 미국 (US)</option>
+          <option value="en-GB">🇬🇧 영국 (UK)</option>
+          <option value="en-AU">🇦🇺 호주 (AU)</option>
+        </select>
+        <select id="speedSelect" aria-label="속도">
+          <option value="0.7">0.7x 천천히</option>
+          <option value="0.85">0.85x 연습용</option>
+          <option value="1" selected>1.0x 원어민</option>
+          <option value="1.15">1.15x 빠르게</option>
+        </select>
+        <div class="progress-pill">완료 단계 <span class="val" id="overallProgress">0 / 16</span></div>
+      </div>
+    </header>
+
+    <div class="alert-banner" id="supportAlert">
+      ⚠️ 현재 브라우저는 음성 인식(Web Speech API)을 지원하지 않습니다. <strong>Chrome, Edge, Safari</strong>에서 열어주세요. (듣기·퀴즈·시각화 기능은 사용 가능합니다.)
+    </div>
+
+    <!-- 4 Modules -->
+    <div class="module-grid" id="moduleGrid"></div>
+
+    <!-- 4 Progressive Stages -->
+    <div class="stepper" id="stepper"></div>
+
+    <!-- Dynamic Stage Content -->
+    <main class="card" id="stageContainer"></main>
+
+    <!-- Practice Log -->
+    <section class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="font-size:1rem; font-weight:800;">최근 발화 기록</h3>
+        <button class="btn btn-secondary" id="clearLogBtn" style="padding:5px 10px; font-size:0.78rem;">기록 초기화</button>
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </section>
+  </div>
+
+  <script>
+    const CURRICULUM = [
+      {
+        id: "m1",
+        title: "모듈 1 · 일상 & 카페",
+        segTag: "분절음 /r/ vs /l/",
+        supraTag: "초분절음 문장 강세·리듬",
+        stage1: {
+          guide: "<strong>/r/</strong>은 혀끝이 입천장에 닿지 않게 뒤로 살짝 말고, <strong>/l/</strong>은 혀끝을 윗니 뒤 잇몸에 단단히 댔다가 뗍니다. 먼저 소리 구별 퀴즈로 귀를 트고, 직접 발음해 보세요.",
+          pairs: [
+            { a: { word: "right", ipa: "/raɪt/", meaning: "오른쪽, 맞는" }, b: { word: "light", ipa: "/laɪt/", meaning: "빛, 가벼운" } },
+            { a: { word: "rice", ipa: "/raɪs/", meaning: "쌀, 밥" }, b: { word: "lice", ipa: "/laɪs/", meaning: "이(벌레)" } },
+            { a: { word: "pray", ipa: "/preɪ/", meaning: "기도하다" }, b: { word: "play", ipa: "/pleɪ/", meaning: "놀다, 연주하다" } },
+            { a: { word: "glass", ipa: "/ɡlæs/", meaning: "유리잔" }, b: { word: "grass", ipa: "/ɡræs/", meaning: "잔디, 풀" } }
+          ]
+        },
+        stage2: {
+          guide: "영어는 <strong>강세 박자(Stress-timed)</strong> 언어입니다. <strong>● 표시된 내용어</strong>는 길고 강하게, 기능어(a, of, in, the)는 짧고 약하게 말하며 <strong>‿ 연음</strong>을 연결하세요.",
+          bpm: 78,
+          sentences: [
+            {
+              raw: "I'd really like a large glass of cold water.",
+              ipa: "/aɪd ˈrɪəli laɪk ə lɑːrdʒ ɡlæs əv koʊld ˈwɔːtər/",
+              meaning: "차가운 물 큰 잔으로 한 잔 정말 마시고 싶어요.",
+              intonation: "평서문 하강 억양 ↘",
+              tokens: [
+                { t: "I'd" },
+                { t: "really", stress: true, seg: true },
+                { t: "like", stress: true, seg: true, link: true },
+                { t: "a" },
+                { t: "large", stress: true, seg: true },
+                { t: "glass", stress: true, seg: true, link: true },
+                { t: "of", pause: true },
+                { t: "cold", stress: true, seg: true },
+                { t: "water.", stress: true }
+              ]
+            },
+            {
+              raw: "Please turn right at the traffic light.",
+              ipa: "/pliːz tɜːrn raɪt æt ðə ˈtræfɪk laɪt/",
+              meaning: "신호등에서 오른쪽으로 돌아주세요.",
+              intonation: "정중한 요청 하강 억양 ↘",
+              tokens: [
+                { t: "Please", seg: true },
+                { t: "turn", stress: true },
+                { t: "right", stress: true, seg: true, link: true },
+                { t: "at", pause: true },
+                { t: "the" },
+                { t: "traffic", stress: true, seg: true },
+                { t: "light.", stress: true, seg: true }
+              ]
+            }
+          ]
+        },
+        stage3: {
+          guide: "상대방의 질문을 듣고, <strong>/r/·/l/ 핵심 단어</strong>와 <strong>문장 강세</strong>를 살려 자연스럽게 대답해 보세요.",
+          partnerRole: "바리스타 (Barista)",
+          partnerLine: "Welcome! What can I get started for you today?",
+          partnerMeaning: "어서 오세요! 오늘 어떤 음료로 준비해 드릴까요?",
+          templatePrefix: "I'd really like a ",
+          templateSuffix: ", please.",
+          options: [
+            { label: "large latte with light ice", tip: "large(r/l), latte(l), light(l) 구분에 집중!" },
+            { label: "regular red tea and a roll", tip: "regular(r/l), red(r), roll(r/l) 연달아 발음!" },
+            { label: "glass of fresh lemon juice", tip: "glass(l), fresh(r), lemon(l) 강세 리듬 유지!" }
+          ]
+        },
+        stage4: {
+          guide: "이제 대본 없이 <strong>자유 발화</strong> 단계입니다. 아래 제시된 /r/·/l/ 단어를 3개 이상 자연스럽게 섞어 2~4문장으로 말해 보세요. 녹음 후 내 목소리를 들으며 리듬과 강세를 점검합니다.",
+          missionTitle: "미션: 좋아하는 카페나 음식점 소개하기",
+          missionPrompt: "자주 가는 카페나 식당에서 주로 무엇을 주문하는지, 분위기가 어떤지 영어로 자유롭게 설명해 보세요.",
+          targetWords: ["really", "like", "large", "light", "relax", "place", "regular", "glass", "fresh", "great"],
+          rubric: [
+            "/r/(혀 말기)와 /l/(혀끝 닿기) 소리를 의식적으로 구분해 발음했다.",
+            "중요한 내용어(명사·동사·형용사)를 더 크고 길게 강세 주어 말했다.",
+            "단어를 하나씩 끊지 않고 자연스러운 리듬과 속도(90~150 WPM)로 이어 말했다."
+          ]
+        }
+      },
+      {
+        id: "m2",
+        title: "모듈 2 · 일정 & 약속",
+        segTag: "분절음 /θ/, /ð/ (TH)",
+        supraTag: "초분절음 연음·축약",
+        stage1: {
+          guide: "<strong>/θ/(무성 TH)</strong>와 <strong>/ð/(유성 TH)</strong>는 혀끝을 윗니와 아랫니 사이에 살짝 내밀고 바람을 통과시킵니다. /s/, /t/, /d/처럼 혀가 안으로 숨지 않게 주의하세요.",
+          pairs: [
+            { a: { word: "think", ipa: "/θɪŋk/", meaning: "생각하다" }, b: { word: "sink", ipa: "/sɪŋk/", meaning: "가라앉다, 싱크대" } },
+            { a: { word: "thank", ipa: "/θæŋk/", meaning: "감사하다" }, b: { word: "tank", ipa: "/tæŋk/", meaning: "탱크, 물탱크" } },
+            { a: { word: "they", ipa: "/ðeɪ/", meaning: "그들" }, b: { word: "day", ipa: "/deɪ/", meaning: "날, 하루" } },
+            { a: { word: "three", ipa: "/θriː/", meaning: "숫자 3" }, b: { word: "tree", ipa: "/triː/", meaning: "나무" } }
+          ]
+        },
+        stage2: {
+          guide: "단어 끝 자음과 다음 단어 첫 모음이 만날 때 <strong>‿ 연음</strong>이 일어납니다. <em>think it's → 띵키츠</em>, <em>both of → 보써브</em>처럼 부드럽게 이어보세요.",
+          bpm: 82,
+          sentences: [
+            {
+              raw: "I think Thursday at three is better for both of us.",
+              ipa: "/aɪ θɪŋk ˈθɜːrzdeɪ æt θriː ɪz ˈbetər fɔːr boʊθ əv ʌs/",
+              meaning: "목요일 3시가 우리 둘 다에게 더 나을 것 같아요.",
+              intonation: "제안 평서문 하강 ↘",
+              tokens: [
+                { t: "I" },
+                { t: "think", stress: true, seg: true },
+                { t: "Thursday", stress: true, seg: true, link: true },
+                { t: "at" },
+                { t: "three", stress: true, seg: true, pause: true },
+                { t: "is" },
+                { t: "better", stress: true },
+                { t: "for" },
+                { t: "both", stress: true, seg: true, link: true },
+                { t: "of", link: true },
+                { t: "us." }
+              ]
+            },
+            {
+              raw: "Thank you for thinking this through with them.",
+              ipa: "/θæŋk juː fɔːr ˈθɪŋkɪŋ ðɪs θruː wɪð ðem/",
+              meaning: "그들과 함께 이 문제를 끝까지 고민해 주셔서 감사합니다.",
+              intonation: "감사 표현 하강 ↘",
+              tokens: [
+                { t: "Thank", stress: true, seg: true, link: true },
+                { t: "you" },
+                { t: "for" },
+                { t: "thinking", stress: true, seg: true },
+                { t: "this", seg: true },
+                { t: "through", stress: true, seg: true, pause: true },
+                { t: "with", seg: true },
+                { t: "them.", seg: true }
+              ]
+            }
+          ]
+        },
+        stage3: {
+          guide: "동료의 일정 제안을 듣고 TH 발음과 연음(think about, at three 등)을 살려 자연스럽게 응답해 보세요.",
+          partnerRole: "동료 (Colleague)",
+          partnerLine: "When should we meet to talk about the monthly report?",
+          partnerMeaning: "월간 보고서 이야기하러 언제 만날까요?",
+          templatePrefix: "I think ",
+          templateSuffix: " works best for both of us.",
+          options: [
+            { label: "Thursday at three thirty", tip: "Thursday, three, thirty의 무성 TH(/θ/) 3연속!" },
+            { label: "this Friday in the morning", tip: "this, the의 유성 TH(/ð/) + in the 연음!" },
+            { label: "the thirteenth of this month", tip: "thirteenth, month의 끝소리 /θ/까지 끝까지 혀 내밀기!" }
+          ]
+        },
+        stage4: {
+          guide: "이번 주 일정이나 약속 계획을 영어로 자유롭게 말해 보세요. TH 발음 단어들을 의식적으로 포함하고, 전치사·관사를 자연스럽게 연음하는 것이 목표입니다.",
+          missionTitle: "미션: 이번 주 일정과 계획 말하기",
+          missionPrompt: "이번 주 목요일이나 주말에 누구와 무엇을 할 예정인지, 왜 그 계획이 좋은지 3~4문장으로 말해 보세요.",
+          targetWords: ["think", "Thursday", "three", "this", "that", "there", "together", "month", "both", "thank"],
+          rubric: [
+            "think, Thursday, this 같은 단어에서 혀끝을 치아 사이에 살짝 넣어 TH를 정확히 냈다.",
+            "both of us, think about처럼 자음+모음 구간을 끊지 않고 연음했다.",
+            "불필요한 한국어식 모음(예: '띵크'의 '으')을 붙이지 않고 가볍게 처리했다."
+          ]
+        }
+      },
+      {
+        id: "m3",
+        title: "모듈 3 · 비즈니스 & 확인",
+        segTag: "분절음 /f/, /v/ vs /p/, /b/",
+        supraTag: "초분절음 상승·하강 억양",
+        stage1: {
+          guide: "<strong>/f/·/v/</strong>는 윗니로 아랫입술 안쪽을 살짝 문 채 공기를 마찰시켜 냅니다. 입술 두 개를 붙였다 떼는 <strong>/p/·/b/</strong>와 확실히 구분하세요.",
+          pairs: [
+            { a: { word: "fan", ipa: "/fæn/", meaning: "선풍기, 팬" }, b: { word: "pan", ipa: "/pæn/", meaning: "프라이팬" } },
+            { a: { word: "coffee", ipa: "/ˈkɔːfi/", meaning: "커피" }, b: { word: "copy", ipa: "/ˈkɑːpi/", meaning: "복사본" } },
+            { a: { word: "very", ipa: "/ˈveri/", meaning: "매우" }, b: { word: "berry", ipa: "/ˈberi/", meaning: "베리(열매)" } },
+            { a: { word: "vote", ipa: "/voʊt/", meaning: "투표하다" }, b: { word: "boat", ipa: "/boʊt/", meaning: "보트, 배" } }
+          ]
+        },
+        stage2: {
+          guide: "<strong>Yes/No 의문문</strong>은 문장 끝을 올리고(<strong>↗</strong>), <strong>Wh- 의문문과 확언</strong>은 끝을 내립니다(<strong>↘</strong>). 억양만으로 말의 의도와 친절함이 달라집니다.",
+          bpm: 84,
+          sentences: [
+            {
+              raw: "Did you review the final version before five?",
+              ipa: "/dɪd juː rɪˈvjuː ðə ˈfaɪnəl ˈvɜːrʒən bɪˈfɔːr faɪv/",
+              meaning: "5시 전에 최종 버전을 검토하셨나요?",
+              intonation: "Yes/No 의문문 상승 억양 ↗",
+              tokens: [
+                { t: "Did", link: true },
+                { t: "you" },
+                { t: "review", stress: true, seg: true },
+                { t: "the" },
+                { t: "final", stress: true, seg: true },
+                { t: "version", stress: true, seg: true, pause: true },
+                { t: "before", seg: true },
+                { t: "five? ↗", stress: true, seg: true }
+              ]
+            },
+            {
+              raw: "We value your feedback very much.",
+              ipa: "/wiː ˈvæljuː jʊr ˈfiːdbæk ˈveri mʌtʃ/",
+              meaning: "저희는 귀하의 피드백을 매우 소중히 여깁니다.",
+              intonation: "진심 어린 확언 하강 억양 ↘",
+              tokens: [
+                { t: "We" },
+                { t: "value", stress: true, seg: true },
+                { t: "your" },
+                { t: "feedback", stress: true, seg: true, pause: true },
+                { t: "very", stress: true, seg: true },
+                { t: "much. ↘", stress: true }
+              ]
+            }
+          ]
+        },
+        stage3: {
+          guide: "상대방의 요청에 확인 질문(상승 억양 ↗)이나 확답(하강 억양 ↘)으로 응답하며 /f/·/v/ 발음을 또박또박 살려보세요.",
+          partnerRole: "팀장 (Manager)",
+          partnerLine: "We need to send the revised file to the client today.",
+          partnerMeaning: "오늘 고객사에게 수정된 파일을 보내야 합니다.",
+          templatePrefix: "Sure! ",
+          templateSuffix: "",
+          options: [
+            { label: "Should I verify the final file before five?", tip: "Yes/No 질문 → 끝(five?)을 부드럽게 올려주세요 ↗" },
+            { label: "I've already reviewed every version carefully.", tip: "확언 → 끝(carefully.)을 안정감 있게 내려주세요 ↘" },
+            { label: "Could you give me brief feedback first?", tip: "정중한 요청 질문 → 끝(first?)을 올려주세요 ↗" }
+          ]
+        },
+        stage4: {
+          guide: "직장·학교·일상에서 누군가에게 업무나 계획을 확인하고 피드백을 주고받는 상황을 상상하며 자유롭게 말해 보세요. 질문(↗)과 진술(↘)을 최소 1번씩 섞어보세요.",
+          missionTitle: "미션: 프로젝트 진행 상황 확인 및 제안하기",
+          missionPrompt: "팀원에게 최근 작업이 잘 진행되고 있는지 묻고(상승 억양), 본인이 도울 수 있는 부분이나 일정을 제안(하강 억양)해 보세요.",
+          targetWords: ["verify", "final", "file", "feedback", "very", "five", "value", "before", "review", "effective"],
+          rubric: [
+            "/f/와 /v/ 발음 시 아랫입술을 윗니에 살짝 대어 /p/, /b/와 구분했다.",
+            "Yes/No 질문 끝에서는 억양을 올리고(↗), 확답·설명 끝에서는 내렸다(↘).",
+            "핵심 전달 정보(final, five, feedback 등)에 자연스럽게 초점 강세를 두었다."
+          ]
+        }
+      },
+      {
+        id: "m4",
+        title: "모듈 4 · 의견 & 스토리",
+        segTag: "분절음 /iː/ vs /ɪ/",
+        supraTag: "초분절음 끊어 읽기·초점 강세",
+        stage1: {
+          guide: "<strong>/iː/</strong>는 입꼬리를 양옆으로 강하게 당겨 길게, <strong>/ɪ/</strong>는 입과 턱의 힘을 빼고 '이'와 '에' 사이 느낌으로 짧게 발음합니다.",
+          pairs: [
+            { a: { word: "sheep", ipa: "/ʃiːp/", meaning: "양" }, b: { word: "ship", ipa: "/ʃɪp/", meaning: "배(선박)" } },
+            { a: { word: "leave", ipa: "/liːv/", meaning: "떠나다" }, b: { word: "live", ipa: "/lɪv/", meaning: "살다" } },
+            { a: { word: "seat", ipa: "/siːt/", meaning: "좌석" }, b: { word: "sit", ipa: "/sɪt/", meaning: "앉다" } },
+            { a: { word: "feel", ipa: "/fiːl/", meaning: "느끼다" }, b: { word: "fill", ipa: "/fɪl/", meaning: "채우다" } }
+          ]
+        },
+        stage2: {
+          guide: "긴 문장은 <strong>의미 단위(Thought Group, / 표시)</strong>로 짧게 쉬어가며 읽어야 전달력이 높아집니다. 각 덩어리 안에서 가장 중요한 단어 1개에 <strong>초점 강세</strong>를 주세요.",
+          bpm: 76,
+          sentences: [
+            {
+              raw: "When I feel stressed, I sit by the beach and breathe deeply.",
+              ipa: "/wen aɪ fiːl strest / aɪ sɪt baɪ ðə biːtʃ / ænd briːð ˈdiːpli/",
+              meaning: "스트레스를 받을 때면, 해변가에 앉아 깊게 숨을 쉽니다.",
+              intonation: "의미 단위 연결(↗) → 문장 끝 하강(↘)",
+              tokens: [
+                { t: "When", link: true },
+                { t: "I" },
+                { t: "feel", stress: true, seg: true },
+                { t: "stressed,", stress: true, pause: true },
+                { t: "I" },
+                { t: "sit", stress: true, seg: true },
+                { t: "by" },
+                { t: "the" },
+                { t: "beach", stress: true, seg: true, pause: true },
+                { t: "and" },
+                { t: "breathe", stress: true, seg: true },
+                { t: "deeply.", stress: true, seg: true }
+              ]
+            },
+            {
+              raw: "This week, we need to keep things simple and clear.",
+              ipa: "/ðɪs wiːk / wiː niːd tuː kiːp θɪŋz ˈsɪmpəl ænd klɪr/",
+              meaning: "이번 주에는 일을 단순하고 명확하게 유지해야 합니다.",
+              intonation: "도입부 끊기(/) → 핵심 강조 하강(↘)",
+              tokens: [
+                { t: "This", seg: true },
+                { t: "week,", stress: true, seg: true, pause: true },
+                { t: "we" },
+                { t: "need", stress: true, seg: true },
+                { t: "to" },
+                { t: "keep", stress: true, seg: true },
+                { t: "things", seg: true },
+                { t: "simple", stress: true, seg: true },
+                { t: "and" },
+                { t: "clear.", stress: true }
+              ]
+            }
+          ]
+        },
+        stage3: {
+          guide: "상대방의 질문에 <strong>의미 단위 끊어 읽기(/)</strong>를 의식하며, 긴장모음(/iː/)과 이완모음(/ɪ/)의 대비를 살려 대답해 보세요.",
+          partnerRole: "친구 (Friend)",
+          partnerLine: "You look really relaxed lately. What's your secret?",
+          partnerMeaning: "요즘 정말 편안해 보여요. 비결이 뭐예요?",
+          templatePrefix: "Whenever I feel busy, ",
+          templateSuffix: "",
+          options: [
+            { label: "I sit quietly and take a deep breath.", tip: "sit(/ɪ/)은 짧게, deep(/iː/)은 길고 또렷하게!" },
+            { label: "I leave my phone and sleep at least eight hours.", tip: "leave(/iː/), sleep(/iː/), least(/iː/) 긴장모음 유지!" },
+            { label: "I visit a peaceful park to keep my mind clear.", tip: "visit(/ɪ/)과 peaceful(/iː/), keep(/iː/) 대조!" }
+          ]
+        },
+        stage4: {
+          guide: "스트레스 해소법이나 나만의 힐링 루틴을 자유롭게 이야기해 보세요. 문장을 의미 단위로 자연스럽게 끊어 말하고, /iː/와 /ɪ/의 길이와 긴장도 차이를 살리는 것이 핵심입니다.",
+          missionTitle: "미션: 나만의 스트레스 해소법 이야기하기",
+          missionPrompt: "바쁘거나 지칠 때 기분을 전환하기 위해 어떤 활동을 하는지 3~4문장으로 자유롭게 설명해 보세요.",
+          targetWords: ["feel", "sit", "sleep", "peaceful", "week", "live", "leave", "keep", "simple", "deep"],
+          rubric: [
+            "feel/fill, leave/live, sit/seat처럼 긴장모음(/iː/)과 이완모음(/ɪ/)의 음질과 길이를 구분했다.",
+            "숨이 차게 몰아 말하지 않고 의미 단위(구·절)마다 짧게 호흡하며 끊어 읽었다.",
+            "가장 강조하고 싶은 핵심 단어에 힘과 높낮이(초점 강세)를 실어 전달했다."
+          ]
+        }
+      }
+    ];
+
+    const STAGES_META = [
+      { idx: 0, label: "1단계 · 통제 연습", name: "분절음 집중", sub: "최소대립쌍 구별·발화" },
+      { idx: 1, label: "2단계 · 통제 연습", name: "초분절음 쉐도잉", sub: "강세·연음·억양·리듬" },
+      { idx: 2, label: "3단계 · 반통제 연습", name: "상황별 롤플레이", sub: "듣고 선택해 응답하기" },
+      { idx: 3, label: "4단계 · 자유 발화", name: "미션 프리토킹", sub: "핵심 음소 통합 발화" }
+    ];
+
+    // App State
+    let currentModuleIdx = 0;
+    let currentStageIdx = 0;
+    let stage1PairIdx = 0;
+    let stage1SelectedSide = "a"; // 'a' or 'b'
+    let stage1QuizTarget = null;
+    let stage2SentenceIdx = 0;
+    let showVisualGuides = true;
+    let stage3OptionIdx = 0;
+
+    // Speech & Audio State
+    let isListening = false;
+    let recognition = null;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordedAudioUrl = null;
+    let recordedAudio = null;
+    let voices = [];
+    let metronomeTimer = null;
+    let audioCtx = null;
+    let speechStartTime = 0;
+    let freeSpeechTranscript = "";
+
+    // Persistence
+    let completedStages = JSON.parse(localStorage.getItem("sfp_completed") || "{}");
+    let practiceLog = JSON.parse(localStorage.getItem("sfp_log") || "[]");
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      document.getElementById("supportAlert").style.display = "block";
+    }
+
+    // Load TTS Voices
+    function loadVoices() {
+      voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+    }
+    loadVoices();
+    if (window.speechSynthesis && window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    function speakText(text, customRate = null) {
+      if (!window.speechSynthesis || !text) return;
+      window.speechSynthesis.cancel();
+      const clean = text.replace(/[↗↘\/‿●]/g, "").trim();
+      const utter = new SpeechSynthesisUtterance(clean);
+      const lang = document.getElementById("accentSelect").value;
+      utter.lang = lang;
+      utter.rate = customRate || parseFloat(document.getElementById("speedSelect").value);
+      const pref =
+        voices.find(v => v.lang === lang && /Google|Natural|Samantha|Daniel|Karen/i.test(v.name)) ||
+        voices.find(v => v.lang === lang) ||
+        voices.find(v => v.lang.startsWith("en"));
+      if (pref) utter.voice = pref;
+      window.speechSynthesis.speak(utter);
+    }
+
+    // Metronome for Stress-Timed Rhythm (Stage 2)
+    function stopMetronome() {
+      if (metronomeTimer) {
+        clearInterval(metronomeTimer);
+        metronomeTimer = null;
+      }
+      const btn = document.getElementById("metronomeBtn");
+      if (btn) btn.classList.remove("on");
+    }
+
+    function toggleMetronome(bpm) {
+      if (metronomeTimer) {
+        stopMetronome();
+        return;
+      }
+      if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) audioCtx = new AC();
+      }
+      if (!audioCtx) return;
+      if (audioCtx.state === "suspended") audioCtx.resume();
+
+      let beat = 0;
+      const playClick = () => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.value = beat % 2 === 0 ? 880 : 540;
+        gain.gain.setValueAtTime(beat % 2 === 0 ? 0.16 : 0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.06);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.06);
+        beat++;
+      };
+      playClick();
+      metronomeTimer = setInterval(playClick, Math.round(60000 / bpm));
+      const btn = document.getElementById("metronomeBtn");
+      if (btn) btn.classList.add("on");
+    }
+
+    // Audio Recording Helpers
+    function resetPlayback() {
+      if (recordedAudioUrl) {
+        URL.revokeObjectURL(recordedAudioUrl);
+        recordedAudioUrl = null;
+      }
+      recordedAudio = null;
+      const pb = document.getElementById("playbackBtn");
+      if (pb) pb.disabled = true;
+    }
+
+    async function startRecording() {
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
+        mediaRecorder.onstop = () => {
+          stream.getTracks().forEach(t => t.stop());
+          if (audioChunks.length > 0) {
+            const blob = new Blob(audioChunks, { type: "audio/webm" });
+            if (recordedAudioUrl) URL.revokeObjectURL(recordedAudioUrl);
+            recordedAudioUrl = URL.createObjectURL(blob);
+            recordedAudio = new Audio(recordedAudioUrl);
+            const pb = document.getElementById("playbackBtn");
+            if (pb) pb.disabled = false;
+          }
+        };
+        mediaRecorder.start();
+      } catch (e) {
+        mediaRecorder = null;
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        try { mediaRecorder.stop(); } catch (e) {}
+      }
+    }
+
+    function stopAllActiveAudio() {
+      if (recognition && isListening) {
+        try { recognition.stop(); } catch (e) {}
+      }
+      isListening = false;
+      stopRecording();
+      stopMetronome();
+      window.speechSynthesis && window.speechSynthesis.cancel();
+    }
+
+    // String & Alignment Scoring
+    function normalizeWord(w) {
+      return w.toLowerCase().replace(/[^a-z0-9']/g, "").replace(/^'+|'+$/g, "");
+    }
+
+    function similarity(a, b) {
+      if (!a && !b) return 1;
+      if (!a || !b) return 0;
+      if (a === b) return 1;
+      const m = a.length, n = b.length;
+      const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+      for (let i = 0; i <= m; i++) dp[i][0] = i;
+      for (let j = 0; j <= n; j++) dp[0][j] = j;
+      for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+          const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+          dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+        }
+      }
+      return 1 - dp[m][n] / Math.max(m, n);
+    }
+
+    function evaluateText(targetText, spokenText) {
+      const targetWords = targetText.replace(/[↗↘\/‿●]/g, "").trim().split(/\s+/).map(normalizeWord).filter(Boolean);
+      const spokenWords = spokenText.trim().split(/\s+/).map(normalizeWord).filter(Boolean);
+      const m = targetWords.length, n = spokenWords.length;
+
+      const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+      const bt = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+
+      for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+          const sim = similarity(targetWords[i - 1], spokenWords[j - 1]);
+          const diag = dp[i - 1][j - 1] + (sim >= 0.55 ? sim : -0.2);
+          const up = dp[i - 1][j];
+          const left = dp[i][j - 1];
+          if (diag >= up && diag >= left) { dp[i][j] = diag; bt[i][j] = 1; }
+          else if (up >= left) { dp[i][j] = up; bt[i][j] = 2; }
+          else { dp[i][j] = left; bt[i][j] = 3; }
+        }
+      }
+
+      const statuses = Array(m).fill("miss");
+      const scores = Array(m).fill(0);
+      let i = m, j = n;
+      while (i > 0 && j > 0) {
+        if (bt[i][j] === 1) {
+          const sim = similarity(targetWords[i - 1], spokenWords[j - 1]);
+          scores[i - 1] = sim;
+          statuses[i - 1] = sim >= 0.9 ? "match" : sim >= 0.6 ? "close" : "miss";
+          i--; j--;
+        } else if (bt[i][j] === 2) i--;
+        else j--;
+      }
+
+      const avg = scores.reduce((a, b) => a + b, 0) / (m || 1);
+      const penalty = n > m + 3 ? Math.min(0.15, (n - m - 3) * 0.03) : 0;
+      return { score: Math.max(0, Math.min(100, Math.round((avg - penalty) * 100))), statuses };
+    }
+
+    function markStageComplete(modId, stageIdx) {
+      const key = `${modId}_s${stageIdx}`;
+      if (!completedStages[key]) {
+        completedStages[key] = true;
+        localStorage.setItem("sfp_completed", JSON.stringify(completedStages));
+        renderModules();
+        renderStepper();
+        updateOverallProgress();
+      }
+    }
+
+    function addLog(stageName, target, spoken, badgeText) {
+      practiceLog.unshift({
+        stageName,
+        target,
+        spoken,
+        badgeText,
+        time: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })
+      });
+      if (practiceLog.length > 25) practiceLog = practiceLog.slice(0, 25);
+      localStorage.setItem("sfp_log", JSON.stringify(practiceLog));
+      renderLog();
+    }
+
+    function updateOverallProgress() {
+      const done = Object.keys(completedStages).length;
+      document.getElementById("overallProgress").textContent = `${done} / ${CURRICULUM.length * 4}`;
+    }
+
+    // Render Module Grid
+    function renderModules() {
+      const grid = document.getElementById("moduleGrid");
+      grid.innerHTML = "";
+      CURRICULUM.forEach((mod, idx) => {
+        const div = document.createElement("button");
+        div.className = "module-card" + (idx === currentModuleIdx ? " active" : "");
+        const dots = [0, 1, 2, 3].map(s => `<span class="m-dot ${completedStages[`${mod.id}_s${s}`] ? "done" : ""}"></span>`).join("");
+        div.innerHTML = `
+          <div class="module-title"><span>${mod.title}</span></div>
+          <div class="module-tags">
+            <span class="tag seg">${mod.segTag}</span>
+            <span class="tag supra">${mod.supraTag}</span>
+          </div>
+          <div class="module-dots">${dots}</div>
+        `;
+        div.addEventListener("click", () => {
+          stopAllActiveAudio();
+          currentModuleIdx = idx;
+          stage1PairIdx = 0;
+          stage1SelectedSide = "a";
+          stage1QuizTarget = null;
+          stage2SentenceIdx = 0;
+          stage3OptionIdx = 0;
+          renderModules();
+          renderStepper();
+          renderStage();
+        });
+        grid.appendChild(div);
+      });
+    }
+
+    // Render Stepper
+    function renderStepper() {
+      const stepper = document.getElementById("stepper");
+      const mod = CURRICULUM[currentModuleIdx];
+      stepper.innerHTML = "";
+      STAGES_META.forEach((st) => {
+        const isDone = !!completedStages[`${mod.id}_s${st.idx}`];
+        const btn = document.createElement("button");
+        btn.className = "step-btn" + (st.idx === currentStageIdx ? " active" : "");
+        btn.innerHTML = `
+          <div class="step-num"><span>${st.label}</span><span>${isDone ? "✅" : ""}</span></div>
+          <div class="step-name">${st.name}</div>
+          <div class="step-sub">${st.sub}</div>
+        `;
+        btn.addEventListener("click", () => {
+          stopAllActiveAudio();
+          currentStageIdx = st.idx;
+          renderStepper();
+          renderStage();
+        });
+        stepper.appendChild(btn);
+      });
+    }
+
+    // Render Active Stage
+    function renderStage() {
+      resetPlayback();
+      const mod = CURRICULUM[currentModuleIdx];
+      const container = document.getElementById("stageContainer");
+
+      if (currentStageIdx === 0) renderStage1(mod, container);
+      else if (currentStageIdx === 1) renderStage2(mod, container);
+      else if (currentStageIdx === 2) renderStage3(mod, container);
+      else renderStage4(mod, container);
+    }
+
+    /* ================= STAGE 1: CONTROLLED SEGMENTAL ================= */
+    function renderStage1(mod, container) {
+      const s1 = mod.stage1;
+      const pair = s1.pairs[stage1PairIdx];
+      const activeWord = pair[stage1SelectedSide];
+
+      container.innerHTML = `
+        <div class="stage-header">
+          <div>
+            <div class="stage-title">1단계 · 분절음 통제 연습 (${mod.segTag})</div>
+            <div class="stage-desc">최소대립쌍(Minimal Pairs)을 귀로 구별하고, 정확한 조음 위치로 말해보세요.</div>
+          </div>
+          <span class="tag seg">통제 연습 · 음소 정확도</span>
+        </div>
+
+        <div class="guide-box seg">💡 <strong>조음 가이드:</strong> ${s1.guide}</div>
+
+        <div class="pair-selector" id="pairSelector">
+          ${s1.pairs.map((p, i) => `
+            <button class="pair-pill ${i === stage1PairIdx ? "active" : ""}" data-idx="${i}">
+              ${p.a.word} / ${p.b.word}
+            </button>
+          `).join("")}
+        </div>
+
+        <div class="quiz-bar">
+          <div>
+            <button class="btn btn-secondary" id="playQuizBtn">👂 소리 구별 퀴즈 듣기</button>
+          </div>
+          <div class="quiz-status" id="quizStatus">퀴즈 버튼을 누른 뒤, 들리는 단어 카드를 클릭해 맞혀보세요.</div>
+        </div>
+
+        <div class="minimal-pair-grid">
+          <div class="pair-box ${stage1SelectedSide === "a" ? "selected" : ""}" id="pairBoxA">
+            <div class="pair-word">${pair.a.word}</div>
+            <div class="pair-ipa">${pair.a.ipa}</div>
+            <div class="pair-meaning">${pair.a.meaning}</div>
+            <button class="btn btn-secondary" id="listenA" style="padding:6px 12px; font-size:0.82rem;">🔊 듣기</button>
+          </div>
+          <div class="pair-box ${stage1SelectedSide === "b" ? "selected" : ""}" id="pairBoxB">
+            <div class="pair-word">${pair.b.word}</div>
+            <div class="pair-ipa">${pair.b.ipa}</div>
+            <div class="pair-meaning">${pair.b.meaning}</div>
+            <button class="btn btn-secondary" id="listenB" style="padding:6px 12px; font-size:0.82rem;">🔊 듣기</button>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn btn-secondary" id="listenSelectedBtn">🔊 "${activeWord.word}" 듣기</button>
+          <button class="btn btn-mic" id="micBtn" ${!SpeechRecognition ? "disabled" : ""}>🎤 "${activeWord.word}" 말하기</button>
+          <button class="btn btn-secondary" id="playbackBtn" disabled>▶️ 내 발음 듣기</button>
+        </div>
+
+        <div class="result-panel" id="resultPanel">
+          <div class="result-top">
+            <div class="score-group">
+              <div class="score-ring" id="scoreRing">-</div>
+              <div>
+                <div style="font-weight:800;" id="fbTitle">결과</div>
+                <div style="font-size:0.86rem; color:var(--text-muted);" id="fbSub"></div>
+              </div>
+            </div>
+          </div>
+          <div class="recognized-box">
+            <div class="recognized-lbl">인식된 단어</div>
+            <div class="recognized-val" id="recognizedVal">...</div>
+          </div>
+        </div>
+
+        <div class="stage-footer">
+          <span style="font-size:0.84rem; color:var(--text-muted);">카드를 클릭해 발음할 단어를 전환할 수 있습니다.</span>
+          <button class="btn btn-primary" id="goNextStage">2단계: 초분절음 쉐도잉 →</button>
+        </div>
+      `;
+
+      // Bindings
+      container.querySelectorAll(".pair-pill").forEach(btn => {
+        btn.addEventListener("click", () => {
+          stage1PairIdx = parseInt(btn.dataset.idx, 10);
+          stage1QuizTarget = null;
+          renderStage();
+        });
+      });
+
+      const handleBoxClick = (side) => {
+        if (stage1QuizTarget) {
+          const box = document.getElementById(side === "a" ? "pairBoxA" : "pairBoxB");
+          const status = document.getElementById("quizStatus");
+          if (side === stage1QuizTarget) {
+            box.classList.add("quiz-correct");
+            status.innerHTML = `<span style="color:var(--success);">정답입니다! 🎉 "${pair[side].word}" (${pair[side].ipa}) 소리였어요.</span>`;
+          } else {
+            box.classList.add("quiz-wrong");
+            status.innerHTML = `<span style="color:var(--danger);">아쉬워요! 다시 들어보세요. 정답은 "${pair[stage1QuizTarget].word}"입니다.</span>`;
+          }
+          stage1QuizTarget = null;
+          setTimeout(() => renderStage(), 1400);
+          return;
+        }
+        stage1SelectedSide = side;
+        renderStage();
+      };
+
+      document.getElementById("pairBoxA").addEventListener("click", () => handleBoxClick("a"));
+      document.getElementById("pairBoxB").addEventListener("click", () => handleBoxClick("b"));
+      document.getElementById("listenA").addEventListener("click", (e) => { e.stopPropagation(); speakText(pair.a.word, 0.85); });
+      document.getElementById("listenB").addEventListener("click", (e) => { e.stopPropagation(); speakText(pair.b.word, 0.85); });
+      document.getElementById("listenSelectedBtn").addEventListener("click", () => speakText(activeWord.word, 0.85));
+
+      document.getElementById("playQuizBtn").addEventListener("click", () => {
+        stage1QuizTarget = Math.random() < 0.5 ? "a" : "b";
+        speakText(pair[stage1QuizTarget].word, 0.85);
+        document.getElementById("quizStatus").innerHTML = `<strong style="color:var(--seg);">어떤 단어가 들렸나요? 위 두 카드 중 하나를 클릭하세요!</strong>`;
+      });
+
+      document.getElementById("micBtn").addEventListener("click", () => {
+        runControlledRecognition(activeWord.word, (score, spoken) => {
+          const otherWord = pair[stage1SelectedSide === "a" ? "b" : "a"].word;
+          const normSpoken = normalizeWord(spoken);
+          if (normSpoken === normalizeWord(otherWord)) {
+            document.getElementById("fbTitle").textContent = `앗! "${otherWord}"로 인식되었어요 👀`;
+            document.getElementById("fbSub").textContent = `최소대립쌍(${pair.a.word} vs ${pair.b.word})의 조음 차이를 다시 확인하고 천천히 발음해 보세요.`;
+          }
+          if (score >= 80) markStageComplete(mod.id, 0);
+          addLog(`1단계(${mod.segTag})`, activeWord.word, spoken, `${score}%`);
+        });
+      });
+
+      bindPlaybackAndNext(1);
+    }
+
+    /* ================= STAGE 2: CONTROLLED SUPRASEGMENTAL ================= */
+    function renderStage2(mod, container) {
+      const s2 = mod.stage2;
+      const sent = s2.sentences[stage2SentenceIdx];
+
+      const tokensHtml = sent.tokens.map((tk, i) => `
+        <span class="word-token ${tk.stress ? "stressed" : ""} ${tk.seg ? "seg-focus" : ""}" data-idx="${i}" data-word="${tk.t}">${tk.t}</span>${tk.link ? '<span class="link-mark">‿</span>' : " "}${tk.pause ? '<span class="pause-mark">/</span> ' : ""}
+      `).join("");
+
+      container.innerHTML = `
+        <div class="stage-header">
+          <div>
+            <div class="stage-title">2단계 · 초분절음 시각화 & 쉐도잉 (${mod.supraTag})</div>
+            <div class="stage-desc">분절음(밑줄)과 초분절음(강세 ● · 연음 ‿ · 끊어 읽기 /)을 동시에 통합해 따라 말해보세요.</div>
+          </div>
+          <span class="tag supra">통제 연습 · 리듬·억양</span>
+        </div>
+
+        <div class="guide-box supra">🎵 <strong>초분절음 가이드:</strong> ${s2.guide}</div>
+
+        <div class="supra-toolbar">
+          <div class="pair-selector" style="margin-bottom:0;">
+            ${s2.sentences.map((_, i) => `
+              <button class="pair-pill ${i === stage2SentenceIdx ? "active" : ""}" data-sidx="${i}" style="${i === stage2SentenceIdx ? "background:var(--supra);border-color:var(--supra);" : ""}">
+                문장 ${i + 1}
+              </button>
+            `).join("")}
+          </div>
+          <div class="toggle-group">
+            <button class="toggle-chip ${showVisualGuides ? "on" : ""}" id="toggleGuidesBtn">👁️ 강세·연음 표기 ${showVisualGuides ? "ON" : "OFF"}</button>
+            <button class="toggle-chip" id="metronomeBtn">🥁 리듬 박자 (${s2.bpm} BPM)</button>
+          </div>
+        </div>
+
+        <div class="visual-sentence-box ${showVisualGuides ? "show-guides" : ""}" id="visualBox">
+          <div class="target-sentence" id="targetSentence">${tokensHtml}</div>
+          <div class="intonation-badge">📈 ${sent.intonation}</div>
+          <div class="ipa-sub">${sent.ipa}</div>
+          <div class="meaning-sub">${sent.meaning}</div>
+          <div class="legend-row">
+            <span><strong style="color:var(--supra);">● 보라색 굵게</strong> = 강세</span>
+            <span><strong style="border-bottom:2px solid var(--seg);">파란 밑줄</strong> = 핵심 분절음</span>
+            <span><strong style="color:#ec4899;">‿</strong> = 연음</span>
+            <span><strong style="color:#64748b;">/</strong> = 끊어 읽기</span>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn btn-secondary" id="listenSentBtn">🔊 원어민 듣기</button>
+          <button class="btn btn-mic" id="micBtn" ${!SpeechRecognition ? "disabled" : ""}>🎤 리듬 맞춰 따라 말하기</button>
+          <button class="btn btn-secondary" id="playbackBtn" disabled>▶️ 내 발음 듣기</button>
+        </div>
+
+        <div class="result-panel" id="resultPanel">
+          <div class="result-top">
+            <div class="score-group">
+              <div class="score-ring" id="scoreRing">-</div>
+              <div>
+                <div style="font-weight:800;" id="fbTitle">결과</div>
+                <div style="font-size:0.86rem; color:var(--text-muted);" id="fbSub"></div>
+              </div>
+            </div>
+            <div id="wpmBadge" style="font-size:0.84rem; font-weight:700; color:var(--supra);"></div>
+          </div>
+          <div class="recognized-box">
+            <div class="recognized-lbl">인식된 문장</div>
+            <div class="recognized-val" id="recognizedVal">...</div>
+          </div>
+        </div>
+
+        <div class="stage-footer">
+          <button class="btn btn-secondary" id="goPrevStage">← 1단계: 분절음</button>
+          <button class="btn btn-primary" id="goNextStage">3단계: 상황별 롤플레이 →</button>
+        </div>
+      `;
+
+      container.querySelectorAll("[data-sidx]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          stopMetronome();
+          stage2SentenceIdx = parseInt(btn.dataset.sidx, 10);
+          renderStage();
+        });
+      });
+
+      container.querySelectorAll(".word-token").forEach(el => {
+        el.addEventListener("click", () => speakText(el.dataset.word, 0.85));
+      });
+
+      document.getElementById("toggleGuidesBtn").addEventListener("click", () => {
+        showVisualGuides = !showVisualGuides;
+        renderStage();
+      });
+
+      document.getElementById("metronomeBtn").addEventListener("click", () => toggleMetronome(s2.bpm));
+      document.getElementById("listenSentBtn").addEventListener("click", () => speakText(sent.raw));
+
+      document.getElementById("micBtn").addEventListener("click", () => {
+        runControlledRecognition(sent.raw, (score, spoken, statuses, wpm) => {
+          const wordEls = container.querySelectorAll(".word-token");
+          wordEls.forEach((el, idx) => {
+            el.classList.remove("match", "close", "miss");
+            if (statuses[idx]) el.classList.add(statuses[idx]);
+          });
+          const wpmEl = document.getElementById("wpmBadge");
+          if (wpmEl && wpm > 0) {
+            const pace = wpm < 95 ? "조금 천천히" : wpm > 175 ? "조금 빠름" : "자연스러운 속도";
+            wpmEl.textContent = `⏱️ 발화 속도: ${wpm} WPM (${pace})`;
+          }
+          if (score >= 75) markStageComplete(mod.id, 1);
+          addLog(`2단계(${mod.supraTag})`, sent.raw, spoken, `${score}% · ${wpm} WPM`);
+        });
+      });
+
+      document.getElementById("goPrevStage").addEventListener("click", () => {
+        stopAllActiveAudio();
+        currentStageIdx = 0;
+        renderStepper();
+        renderStage();
+      });
+      bindPlaybackAndNext(2);
+    }
+
+    /* ================= STAGE 3: GUIDED ROLEPLAY ================= */
+    function renderStage3(mod, container) {
+      const s3 = mod.stage3;
+      const opt = s3.options[stage3OptionIdx];
+      const fullResponse = `${s3.templatePrefix}${opt.label}${s3.templateSuffix}`;
+
+      container.innerHTML = `
+        <div class="stage-header">
+          <div>
+            <div class="stage-title">3단계 · 반통제 상황별 롤플레이</div>
+            <div class="stage-desc">상대방의 말을 듣고, 원하는 표현을 골라 자연스러운 억양과 발음으로 응답해 보세요.</div>
+          </div>
+          <span class="tag" style="background:#fef3c7; color:#b45309;">반통제 연습 · 맥락 적용</span>
+        </div>
+
+        <div class="guide-box">🎭 <strong>롤플레이 가이드:</strong> ${s3.guide}</div>
+
+        <div class="dialogue-box">
+          <div class="bubble partner">
+            <div class="bubble-role">
+              <span>🗣️ ${s3.partnerRole}</span>
+              <button class="btn btn-secondary" id="playPartnerBtn" style="padding:4px 10px; font-size:0.78rem;">🔊 상대방 듣기</button>
+            </div>
+            <div style="font-size:1.12rem; font-weight:800; margin-bottom:4px;">"${s3.partnerLine}"</div>
+            <div style="font-size:0.85rem; color:var(--text-muted);">${s3.partnerMeaning}</div>
+          </div>
+
+          <div class="bubble user">
+            <div class="bubble-role">
+              <span>🙋 나의 응답 (아래 옵션을 바꿔가며 연습하세요)</span>
+              <button class="btn btn-secondary" id="playModelBtn" style="padding:4px 10px; font-size:0.78rem;">🔊 예시 발음 듣기</button>
+            </div>
+            <div class="target-sentence" id="roleplayTarget" style="font-size:1.25rem; text-align:left; margin:6px 0;">
+              ${fullResponse.split(/\s+/).map(w => `<span class="word-token" data-word="${w}">${w}</span>`).join(" ")}
+            </div>
+            <div style="font-size:0.83rem; color:var(--primary); font-weight:600;">💡 포인트: ${opt.tip}</div>
+            <div class="slot-options">
+              ${s3.options.map((o, i) => `
+                <button class="slot-chip ${i === stage3OptionIdx ? "active" : ""}" data-oidx="${i}">
+                  옵션 ${i + 1}: ${o.label}
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn btn-secondary" id="listenPartnerBtn2">🔊 대화 시작 (상대방 듣기)</button>
+          <button class="btn btn-mic" id="micBtn" ${!SpeechRecognition ? "disabled" : ""}>🎤 내 응답 말하기</button>
+          <button class="btn btn-secondary" id="playbackBtn" disabled>▶️ 내 발음 듣기</button>
+        </div>
+
+        <div class="result-panel" id="resultPanel">
+          <div class="result-top">
+            <div class="score-group">
+              <div class="score-ring" id="scoreRing">-</div>
+              <div>
+                <div style="font-weight:800;" id="fbTitle">결과</div>
+                <div style="font-size:0.86rem; color:var(--text-muted);" id="fbSub"></div>
+              </div>
+            </div>
+          </div>
+          <div class="recognized-box">
+            <div class="recognized-lbl">인식된 내 응답</div>
+            <div class="recognized-val" id="recognizedVal">...</div>
+          </div>
+        </div>
+
+        <div class="stage-footer">
+          <button class="btn btn-secondary" id="goPrevStage">← 2단계: 초분절음</button>
+          <button class="btn btn-primary" id="goNextStage">4단계: 자유 발화 →</button>
+        </div>
+      `;
+
+      container.querySelectorAll("[data-oidx]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          stage3OptionIdx = parseInt(btn.dataset.oidx, 10);
+          renderStage();
+        });
+      });
+
+      container.querySelectorAll(".word-token").forEach(el => {
+        el.addEventListener("click", () => speakText(el.dataset.word, 0.85));
+      });
+
+      document.getElementById("playPartnerBtn").addEventListener("click", () => speakText(s3.partnerLine));
+      document.getElementById("listenPartnerBtn2").addEventListener("click", () => speakText(s3.partnerLine));
+      document.getElementById("playModelBtn").addEventListener("click", () => speakText(fullResponse));
+
+      document.getElementById("micBtn").addEventListener("click", () => {
+        runControlledRecognition(fullResponse, (score, spoken, statuses) => {
+          const wordEls = container.querySelectorAll("#roleplayTarget .word-token");
+          wordEls.forEach((el, idx) => {
+            el.classList.remove("match", "close", "miss");
+            if (statuses[idx]) el.classList.add(statuses[idx]);
+          });
+          if (score >= 75) markStageComplete(mod.id, 2);
+          addLog("3단계(롤플레이)", fullResponse, spoken, `${score}%`);
+        });
+      });
+
+      document.getElementById("goPrevStage").addEventListener("click", () => {
+        stopAllActiveAudio();
+        currentStageIdx = 1;
+        renderStepper();
+        renderStage();
+      });
+      bindPlaybackAndNext(3);
+    }
+
+    /* ================= STAGE 4: FREE PRODUCTION ================= */
+    function renderStage4(mod, container) {
+      const s4 = mod.stage4;
+      freeSpeechTranscript = "";
+
+      container.innerHTML = `
+        <div class="stage-header">
+          <div>
+            <div class="stage-title">4단계 · 자유 발화 (Free Production)</div>
+            <div class="stage-desc">배운 분절음 단어와 초분절음(강세·연음·억양)을 실제 나만의 문장 속에 자연스럽게 녹여 말해보세요.</div>
+          </div>
+          <span class="tag free">자유 발화 · 실전 통합</span>
+        </div>
+
+        <div class="guide-box free">🚀 <strong>자유 발화 가이드:</strong> ${s4.guide}</div>
+
+        <div class="mission-card">
+          <div class="mission-title">🎯 ${s4.missionTitle}</div>
+          <div class="mission-prompt">${s4.missionPrompt}</div>
+          <div style="font-size:0.8rem; font-weight:800; color:#065f46;">포함해 볼 핵심 분절음 단어 (클릭하면 발음 듣기 · 말하면 자동 체크 ✅)</div>
+          <div class="target-words-wrap" id="kwWrap">
+            ${s4.targetWords.map(w => `<span class="kw-badge" data-kw="${w.toLowerCase()}">${w}</span>`).join("")}
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn btn-mic" id="micBtn" ${!SpeechRecognition ? "disabled" : ""}>🎤 자유 발화 시작</button>
+          <button class="btn btn-secondary" id="playbackBtn" disabled>▶️ 내 발화 다시 듣기</button>
+        </div>
+
+        <div class="free-metrics">
+          <div class="metric-tile">
+            <div class="metric-val" id="mWordCount">0</div>
+            <div class="metric-lbl">말한 단어 수</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-val" id="mWpm">0 WPM</div>
+            <div class="metric-lbl">말하기 속도 (권장 100~150)</div>
+          </div>
+          <div class="metric-tile">
+            <div class="metric-val" id="mKwHit">0 / 3+</div>
+            <div class="metric-lbl">핵심 분절음 단어 사용</div>
+          </div>
+        </div>
+
+        <div class="free-transcript-box">
+          <div class="recognized-lbl">실시간 발화 스크립트</div>
+          <div id="freeTranscript" style="font-size:1.02rem; color:var(--text); margin-top:4px;">
+            마이크 버튼을 누르고 2~4문장 이상 자유롭게 말씀해 보세요. 다 말한 뒤 버튼을 다시 누르면 분석이 완료됩니다.
+          </div>
+        </div>
+
+        <div class="rubric-box">
+          <h4>🎧 내 발화를 다시 들으며 초분절음 자가 점검하기</h4>
+          ${s4.rubric.map((r, i) => `
+            <label class="rubric-item">
+              <input type="checkbox" class="rubric-check" data-r="${i}" />
+              <span>${r}</span>
+            </label>
+          `).join("")}
+        </div>
+
+        <div class="stage-footer">
+          <button class="btn btn-secondary" id="goPrevStage">← 3단계: 롤플레이</button>
+          <button class="btn btn-primary" id="completeModuleBtn">
+            ${currentModuleIdx < CURRICULUM.length - 1 ? "모듈 완료 & 다음 모듈 →" : "🎉 전체 커리큘럼 완료 체크"}
+          </button>
+        </div>
+      `;
+
+      container.querySelectorAll(".kw-badge").forEach(el => {
+        el.addEventListener("click", () => speakText(el.textContent, 0.85));
+      });
+
+      document.getElementById("micBtn").addEventListener("click", () => toggleFreeRecognition(mod));
+
+      document.getElementById("playbackBtn").addEventListener("click", () => {
+        if (recordedAudio) {
+          recordedAudio.currentTime = 0;
+          recordedAudio.play();
+        }
+      });
+
+      document.getElementById("goPrevStage").addEventListener("click", () => {
+        stopAllActiveAudio();
+        currentStageIdx = 2;
+        renderStepper();
+        renderStage();
+      });
+
+      document.getElementById("completeModuleBtn").addEventListener("click", () => {
+        stopAllActiveAudio();
+        markStageComplete(mod.id, 3);
+        if (currentModuleIdx < CURRICULUM.length - 1) {
+          currentModuleIdx++;
+          currentStageIdx = 0;
+          stage1PairIdx = 0;
+          stage2SentenceIdx = 0;
+          stage3OptionIdx = 0;
+          renderModules();
+          renderStepper();
+          renderStage();
+        } else {
+          alert("훌륭합니다! 모든 모듈의 4단계 학습을 완료했습니다. 🎉");
+        }
+      });
+    }
+
+    function bindPlaybackAndNext(nextStageIndex) {
+      const pb = document.getElementById("playbackBtn");
+      if (pb) {
+        pb.addEventListener("click", () => {
+          if (recordedAudio) {
+            recordedAudio.currentTime = 0;
+            recordedAudio.play();
+          }
+        });
+      }
+      const nextBtn = document.getElementById("goNextStage");
+      if (nextBtn) {
+        nextBtn.addEventListener("click", () => {
+          stopAllActiveAudio();
+          currentStageIdx = nextStageIndex;
+          renderStepper();
+          renderStage();
+        });
+      }
+    }
+
+    /* ================= SPEECH RECOGNITION (STAGES 1-3) ================= */
+    function runControlledRecognition(targetText, onComplete) {
+      if (!SpeechRecognition) return;
+      const micBtn = document.getElementById("micBtn");
+
+      if (isListening) {
+        recognition && recognition.stop();
+        stopRecording();
+        return;
+      }
+
+      window.speechSynthesis && window.speechSynthesis.cancel();
+      resetPlayback();
+
+      recognition = new SpeechRecognition();
+      recognition.lang = document.getElementById("accentSelect").value;
+      recognition.interimResults = true;
+      recognition.continuous = false;
+
+      let finalText = "";
+
+      recognition.onstart = () => {
+        isListening = true;
+        speechStartTime = Date.now();
+        micBtn.classList.add("listening");
+        micBtn.textContent = "⏹️ 듣는 중... (클릭해 중지)";
+        const rp = document.getElementById("resultPanel");
+        if (rp) rp.classList.add("show");
+        document.getElementById("recognizedVal").textContent = "말씀해 주세요...";
+        document.getElementById("scoreRing").textContent = "...";
+        document.getElementById("scoreRing").className = "score-ring";
+        document.getElementById("fbTitle").textContent = "발음을 분석 중입니다";
+        document.getElementById("fbSub").textContent = "자연스러운 속도로 끝까지 말해 보세요.";
+        startRecording();
+      };
+
+      recognition.onresult = (event) => {
+        let interim = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const tr = event.results[i][0].transcript;
+          if (event.results[i].isFinal) finalText += tr + " ";
+          else interim += tr;
+        }
+        document.getElementById("recognizedVal").textContent = (finalText + interim).trim() || "...";
+      };
+
+      recognition.onerror = (event) => {
+        isListening = false;
+        micBtn.classList.remove("listening");
+        micBtn.textContent = "🎤 다시 말하기";
+        stopRecording();
+        document.getElementById("scoreRing").textContent = "!";
+        document.getElementById("scoreRing").className = "score-ring low";
+        document.getElementById("fbTitle").textContent = "인식 실패";
+        document.getElementById("fbSub").textContent =
+          event.error === "not-allowed"
+            ? "마이크 권한이 차단되었습니다. 브라우저 주소창에서 마이크를 허용해 주세요."
+            : "목소리가 감지되지 않았습니다. 마이크에 가까이 대고 다시 시도해 주세요.";
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove("listening");
+        micBtn.textContent = "🎤 다시 말하기";
+        stopRecording();
+
+        const spoken = finalText.trim() || (document.getElementById("recognizedVal").textContent !== "말씀해 주세요..." ? document.getElementById("recognizedVal").textContent.trim() : "");
+        if (!spoken || spoken === "...") return;
+
+        const elapsedMin = Math.max((Date.now() - speechStartTime) / 60000, 0.02);
+        const wordCount = spoken.split(/\s+/).filter(Boolean).length;
+        const wpm = Math.min(260, Math.round(wordCount / elapsedMin));
+
+        const { score, statuses } = evaluateText(targetText, spoken);
+        const ring = document.getElementById("scoreRing");
+        ring.textContent = `${score}%`;
+        ring.className = "score-ring " + (score >= 85 ? "high" : score >= 60 ? "mid" : "low");
+
+        document.getElementById("recognizedVal").textContent = spoken;
+        if (score >= 85) {
+          document.getElementById("fbTitle").textContent = "훌륭해요! 매우 정확한 발음입니다 🎉";
+          document.getElementById("fbSub").textContent = "다음 단계로 넘어가거나 다른 문장도 연습해 보세요.";
+        } else if (score >= 60) {
+          document.getElementById("fbTitle").textContent = "좋아요! 조금만 더 다듬어 볼까요? 👍";
+          document.getElementById("fbSub").textContent = "노란색/빨간색 단어를 클릭해 발음을 다시 듣고 교정해 보세요.";
+        } else {
+          document.getElementById("fbTitle").textContent = "천천히 다시 도전해 보세요 💪";
+          document.getElementById("fbSub").textContent = "속도를 0.85x로 낮춰 듣고 강세와 핵심 음소를 먼저 익혀보세요.";
+        }
+
+        if (onComplete) onComplete(score, spoken, statuses, wpm);
+      };
+
+      try { recognition.start(); } catch (e) { isListening = false; }
+    }
+
+    /* ================= FREE SPEECH RECOGNITION (STAGE 4) ================= */
+    function toggleFreeRecognition(mod) {
+      if (!SpeechRecognition) return;
+      const micBtn = document.getElementById("micBtn");
+
+      if (isListening) {
+        recognition && recognition.stop();
+        stopRecording();
+        return;
+      }
+
+      window.speechSynthesis && window.speechSynthesis.cancel();
+      resetPlayback();
+      freeSpeechTranscript = "";
+
+      recognition = new SpeechRecognition();
+      recognition.lang = document.getElementById("accentSelect").value;
+      recognition.interimResults = true;
+      recognition.continuous = true;
+
+      recognition.onstart = () => {
+        isListening = true;
+        speechStartTime = Date.now();
+        micBtn.classList.add("listening");
+        micBtn.textContent = "⏹️ 발화 종료 & 분석하기";
+        document.getElementById("freeTranscript").textContent = "듣고 있습니다... 자유롭게 영어로 말씀해 주세요!";
+        startRecording();
+      };
+
+      recognition.onresult = (event) => {
+        let interim = "";
+        let finalized = "";
+        for (let i = 0; i < event.results.length; i++) {
+          const tr = event.results[i][0].transcript;
+          if (event.results[i].isFinal) finalized += tr + " ";
+          else interim += tr;
+        }
+        freeSpeechTranscript = (finalized + interim).trim();
+        document.getElementById("freeTranscript").textContent = freeSpeechTranscript || "...";
+        updateFreeMetrics(mod, freeSpeechTranscript);
+      };
+
+      recognition.onerror = (event) => {
+        isListening = false;
+        micBtn.classList.remove("listening");
+        micBtn.textContent = "🎤 자유 발화 시작";
+        stopRecording();
+        if (event.error === "not-allowed") {
+          document.getElementById("freeTranscript").textContent = "마이크 권한이 차단되었습니다. 브라우저 설정에서 마이크를 허용해 주세요.";
+        }
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove("listening");
+        micBtn.textContent = "🎤 자유 발화 다시 시작";
+        stopRecording();
+
+        if (freeSpeechTranscript.trim().length > 0) {
+          const { wordCount, wpm, hitCount } = updateFreeMetrics(mod, freeSpeechTranscript);
+          if (wordCount >= 10 && hitCount >= 2) {
+            markStageComplete(mod.id, 3);
+          }
+          addLog(`4단계(자유발화)`, mod.stage4.missionTitle, freeSpeechTranscript, `${wordCount}단어 · ${wpm} WPM · 핵심어 ${hitCount}개`);
+        }
+      };
+
+      try { recognition.start(); } catch (e) { isListening = false; }
+    }
+
+    function updateFreeMetrics(mod, text) {
+      const words = text.trim().split(/\s+/).map(normalizeWord).filter(Boolean);
+      const wordCount = words.length;
+      const elapsedMin = Math.max((Date.now() - speechStartTime) / 60000, 0.03);
+      const wpm = Math.min(260, Math.round(wordCount / elapsedMin));
+
+      let hitCount = 0;
+      const wordSet = new Set(words);
+      document.querySelectorAll("#kwWrap .kw-badge").forEach(el => {
+        const kw = el.dataset.kw;
+        const matched = wordSet.has(kw) || words.some(w => w.startsWith(kw) && w.length <= kw.length + 3);
+        if (matched) {
+          el.classList.add("used");
+          hitCount++;
+        } else {
+          el.classList.remove("used");
+        }
+      });
+
+      document.getElementById("mWordCount").textContent = wordCount;
+      document.getElementById("mWpm").textContent = `${wpm} WPM`;
+      document.getElementById("mKwHit").textContent = `${hitCount} / 3+`;
+      return { wordCount, wpm, hitCount };
+    }
+
+    /* ================= LOG ================= */
+    function renderLog() {
+      const list = document.getElementById("historyList");
+      if (practiceLog.length === 0) {
+        list.innerHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.86rem; padding:14px 0;">아직 발화 기록이 없습니다. 1단계부터 차근차근 시작해 보세요!</div>`;
+        return;
+      }
+      list.innerHTML = practiceLog.map(item => `
+        <div class="history-item">
+          <div>
+            <div style="font-weight:800; color:var(--primary); font-size:0.78rem;">${item.stageName} · ${item.time}</div>
+            <div style="font-weight:700;">${item.target}</div>
+            <div style="color:var(--text-muted); font-size:0.8rem;">내 발화: "${item.spoken}"</div>
+          </div>
+          <span class="tag" style="background:var(--primary-soft); color:var(--primary); white-space:nowrap;">${item.badgeText}</span>
+        </div>
+      `).join("");
+    }
+
+    document.getElementById("clearLogBtn").addEventListener("click", () => {
+      if (!confirm("발화 기록과 완료 진행도를 초기화할까요?")) return;
+      practiceLog = [];
+      completedStages = {};
+      localStorage.removeItem("sfp_log");
+      localStorage.removeItem("sfp_completed");
+      renderModules();
+      renderStepper();
+      updateOverallProgress();
+      renderLog();
+    });
+
+    // Init
+    renderModules();
+    renderStepper();
+    updateOverallProgress();
+    renderStage();
+    renderLog();
+  </script>
+</body>
+</html>
